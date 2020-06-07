@@ -67,37 +67,30 @@ public class MultipleBodySystem extends BorderPane
             double radius = 50*(Math.pow(body.mass, 1.0/3.0)/Math.pow(maxMass, 1.0/3.0));
             pen.fillOval(body.position[0]/scale - radius, body.position[1]/scale - radius, radius*2, radius*2);
         }
-        /*try
-        {
-            Thread.currentThread().sleep(10);
-        }
-        catch(InterruptedException ex)
-        {
-            Thread.currentThread().interrupt();
-        }*/
     }
 
     public HBox buildTopBar()
     {
         Button play = new Button("Play");
+        
+        Runnable refresh = new Runnable() 
+        {
+            @Override
+            public void run()
+            {
+                updateScreen();
+                Thread.sleep(10);
+            }
+        }
+
         play.setOnAction(e -> {
-            Thread th = new Thread();
-            th.start();
             for (int screenUpdate = 0; screenUpdate < 30; screenUpdate++)
             {
                 for (int posUpdate = 0; posUpdate < 6; posUpdate++)
                 {
                     updateBodies(600);
                 }
-                updateScreen();
-                try
-                {
-                    Thread.currentThread().sleep(10);
-                }
-                catch(InterruptedException ex)
-                {
-                    Thread.currentThread().interrupt();
-                }
+                refresh();
             }
         });
         HBox out = new HBox();
