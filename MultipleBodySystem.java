@@ -5,6 +5,8 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.control.Button;
 import javafx.scene.layout.HBox;
+import javafx.animation.PauseTransition;
+import javafx.util.Duration;
 
 
 public class MultipleBodySystem extends BorderPane
@@ -15,9 +17,9 @@ public class MultipleBodySystem extends BorderPane
     private GraphicsContext pen;
     private double maxMass;
 
-    public MultipleBodySystem(double scale)
+    public MultipleBodySystem(double width, double height, double scale)
     {
-        this.canvas = new Canvas(500, 500);
+        this.canvas = new Canvas(width, height);
         setCenter(canvas);
         this.pen = canvas.getGraphicsContext2D();
         this.maxMass = 0;
@@ -73,25 +75,26 @@ public class MultipleBodySystem extends BorderPane
     {
         Button play = new Button("Play");
         
-        Runnable refresh = new Runnable() 
-        {
-            @Override
-            public void run()
-            {
-                updateScreen();
-                Thread.sleep(10);
-            }
-        }
 
         play.setOnAction(e -> {
-            for (int screenUpdate = 0; screenUpdate < 30; screenUpdate++)
-            {
-                for (int posUpdate = 0; posUpdate < 6; posUpdate++)
+            new Thread(() -> {
+                for (int screenUpdate = 0; screenUpdate < 1800; screenUpdate++)
                 {
-                    updateBodies(600);
+                    for (int posUpdate = 0; posUpdate < 24; posUpdate++)
+                    {
+                        updateBodies(600);
+                    }
+                    updateScreen();
+                    try
+                    {
+                        Thread.currentThread().sleep(10);
+                    }
+                    catch(InterruptedException ex)
+                    {
+                        Thread.currentThread().interrupt();
+                    }
                 }
-                refresh();
-            }
+            }).start();
         });
         HBox out = new HBox();
         out.getChildren().add(play);
