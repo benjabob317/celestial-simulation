@@ -24,9 +24,8 @@ public class CelestialSimulation extends Application
 
     public void start(Stage primary)
     {
-        this.systems = new ArrayList<MultipleBodySystem>();
         BorderPane bp = new BorderPane();
-        bp.setTop(buildTopBar());
+        this.systems = new ArrayList<MultipleBodySystem>();
 
         CelestialBody earth = new CelestialBody(5.972E24, Color.color(0, 1, 0));
         CelestialBody moon = new CelestialBody(7.34767309E22, Color.color(0.5, 0.5, 0.5));
@@ -40,17 +39,24 @@ public class CelestialSimulation extends Application
         earthMoon.addCelestialBody(earth);
         earthMoon.addCelestialBody(moon);*/
 
-        MultipleBodySystem earthMoonSun = new MultipleBodySystem(800, 800, 5*1.495978707E8, 40, bp);
+        MultipleBodySystem earthMoonSun = new MultipleBodySystem(1000, 800, 5*1.495978707E8, 40, bp);
         sun.initVectors(0, 0, 0, 0);
         earth.initVectors(1.495978707E11, 0, 0, 30000);
         moon.initVectors(1.495978707E11 + 384400000, 0, 0, 30000 + 1022);
+        mars.initVectors(227939200000.0, 0, 0, 24007);
         earthMoonSun.addCelestialBody(sun);
         earthMoonSun.addCelestialBody(earth);
         earthMoonSun.addCelestialBody(moon);
-    
-
+        earthMoonSun.addCelestialBody(mars);
+        
+        //earthMoonSun.updateRefBody(earth);
+        earthMoonSun.updateRadLogCoef(0.4);
+        earthMoonSun.updateDistLogCoef(0.32);
+        earthMoonSun.updateScale(Math.pow(10, 4));
         systems.add(earthMoonSun);
         systems.get(0).updateScreen();        
+       
+        bp.setTop(buildTopBar());
         primary.setScene(new Scene(bp));
         primary.show();
     }
@@ -67,7 +73,7 @@ public class CelestialSimulation extends Application
             systems.get(0).stop();
         });
 
-        Slider distanceSlider = new Slider(4, 10, Math.log10(5*1.495978707E8));
+        Slider distanceSlider = new Slider(4, 10, Math.log10(systems.get(0).scale));
         distanceSlider.setShowTickMarks(true);
         distanceSlider.setShowTickLabels(true);
         distanceSlider.setMajorTickUnit(1);
@@ -82,7 +88,7 @@ public class CelestialSimulation extends Application
         sliderBox.setAlignment(Pos.CENTER);
         sliderBox.getChildren().addAll(distanceSlider, new Text("Distance Scale"));
 
-        Slider distLogSlider = new Slider(0, 1, 1);
+        Slider distLogSlider = new Slider(0, 1, systems.get(0).distLogCoef);
         distLogSlider.setShowTickMarks(true);
         distLogSlider.setShowTickLabels(true);
         distLogSlider.setMajorTickUnit(.1);
@@ -107,7 +113,7 @@ public class CelestialSimulation extends Application
         });
 
 
-        Slider bodyScaleSlider = new Slider(0, 150, 100);
+        Slider bodyScaleSlider = new Slider(0, 150, systems.get(0).bodyScale);
         bodyScaleSlider.setShowTickMarks(true);
         bodyScaleSlider.setShowTickLabels(true);
         bodyScaleSlider.setMajorTickUnit(10);
@@ -123,7 +129,7 @@ public class CelestialSimulation extends Application
         bodySliderBox.getChildren().addAll(bodyScaleSlider, new Text("Body Scale"));
 
 
-        Slider bodyLogSlider = new Slider(0, 1, 1);
+        Slider bodyLogSlider = new Slider(0, 1, systems.get(0).radLogCoef);
         bodyLogSlider.setShowTickMarks(true);
         bodyLogSlider.setShowTickLabels(true);
         bodyLogSlider.setMajorTickUnit(.1);
@@ -138,8 +144,25 @@ public class CelestialSimulation extends Application
         bodyLogBox.setAlignment(Pos.CENTER);
         bodyLogBox.getChildren().addAll(bodyLogSlider, new Text("Body Log"));
 
+
+        Slider timeSlider = new Slider(0, 24, systems.get(0).animationHours);
+        timeSlider.setShowTickMarks(true);
+        timeSlider.setShowTickLabels(true);
+        timeSlider.setMajorTickUnit(1);
+        timeSlider.setBlockIncrement(.5);
+        timeSlider.valueProperty().addListener(new ChangeListener<Number>() {
+            public void changed(ObservableValue<? extends Number> ov, Number old_val, Number new_val) {
+                systems.get(0).animationHours = timeSlider.getValue();
+            }
+        });
+
+        VBox timeBox = new VBox();
+        timeBox.setAlignment(Pos.CENTER);
+        timeBox.getChildren().addAll(timeSlider, new Text("Hours per 10 ms"));
+
+
         HBox out = new HBox();
-        out.getChildren().addAll(play, pause, sliderBox, distLogBox, reset, bodySliderBox, bodyLogBox);
+        out.getChildren().addAll(play, pause, sliderBox, distLogBox, reset, bodySliderBox, bodyLogBox, timeBox);
         return out;
     }
 }

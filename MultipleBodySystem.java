@@ -13,13 +13,15 @@ public class MultipleBodySystem extends Canvas
 {
     private ArrayList<CelestialBody> celestialBodies;
     private BorderPane bp;
-    private double scale; // meters per pixel pretty much
+    public double scale; // meters per pixel pretty much
     private GraphicsContext pen;
     private double maxMass;
-    private double bodyScale;
+    public double bodyScale;
     private boolean running;
-    private double radLogCoef;
-    private double distLogCoef;
+    public double radLogCoef;
+    public double distLogCoef;
+    private CelestialBody refBody;
+    public double animationHours;
 
     public MultipleBodySystem(double width, double height, double scale, double bodyScale, BorderPane bp)
     {
@@ -34,6 +36,8 @@ public class MultipleBodySystem extends Canvas
         this.running = false;
         this.radLogCoef = 1;
         this.distLogCoef = 1;
+        this.refBody = null;
+        this.animationHours = 4;
     }
 
     public void addCelestialBody(CelestialBody body)
@@ -73,9 +77,8 @@ public class MultipleBodySystem extends Canvas
         }
     }
 
-    public void updateScreen()
+    public void updateScreen() // eqiuvalent to a draw method
     {
-        //System.out.println(celestialBodies);
         pen.setFill(Color.WHITE);
         pen.fillRect(0, 0, getWidth(), getHeight()); // clears the screen
 
@@ -83,7 +86,15 @@ public class MultipleBodySystem extends Canvas
         {
             pen.setFill(body.color);
             double radius = bodyScale*Math.pow(Math.E, radLogCoef*Math.log(Math.pow(body.mass, 1.0/3.0)/Math.pow(maxMass, 1.0/3.0)));
-            pen.fillOval(getWidth()/2 + Math.pow(Math.E, distLogCoef*Math.log(body.position[0]/scale)) - radius, getHeight()/2 + Math.pow(Math.E, distLogCoef*Math.log(body.position[1]/scale)) - radius, radius*2, radius*2);
+            
+            if (refBody != null)
+            {
+                pen.fillOval(getWidth()/2 - Math.cos(body.directionToBody(refBody))*Math.pow(Math.E, distLogCoef*Math.log(body.distanceToBody(refBody)/scale)) - radius, getHeight()/2 - Math.sin(body.directionToBody(refBody))*Math.pow(Math.E, distLogCoef*Math.log(body.distanceToBody(refBody)/scale)) - radius, radius*2, radius*2);
+            }
+            else {
+                pen.fillOval(getWidth()/2 + body.position[0]/scale - radius, getHeight()/2 + body.position[1]/scale - radius, radius*2, radius*2);
+            }
+
         }
     }
 
@@ -110,6 +121,12 @@ public class MultipleBodySystem extends Canvas
         distLogCoef = newCoef;
         updateScreen();
     }
+    
+    public void updateRefBody(CelestialBody newRefBody)
+    {
+        refBody = newRefBody;
+        updateScreen();
+    }
 
     public void start()
     {
@@ -119,7 +136,7 @@ public class MultipleBodySystem extends Canvas
             new Thread(() -> {
                 while (this.running)
                 {
-                    for (int posUpdate = 0; posUpdate < 24; posUpdate++)
+                    for (int posUpdate = 0; posUpdate < 6*animationHours; posUpdate++)
                     {
                         updateBodies(600);
                     }
