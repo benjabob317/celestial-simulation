@@ -9,23 +9,31 @@ import javafx.animation.PauseTransition;
 import javafx.util.Duration;
 
 
-public class MultipleBodySystem extends BorderPane
+public class MultipleBodySystem extends Canvas
 {
     private ArrayList<CelestialBody> celestialBodies;
-    private Canvas canvas;
+    private BorderPane bp;
     private double scale; // meters per pixel pretty much
     private GraphicsContext pen;
     private double maxMass;
+    private double bodyScale;
+    private boolean running;
+    private double radLogCoef;
+    private double distLogCoef;
 
-    public MultipleBodySystem(double width, double height, double scale)
+    public MultipleBodySystem(double width, double height, double scale, double bodyScale, BorderPane bp)
     {
-        this.canvas = new Canvas(width, height);
-        setCenter(canvas);
-        this.pen = canvas.getGraphicsContext2D();
+        super(width, height);
+        this.pen = getGraphicsContext2D();
         this.maxMass = 0;
         this.scale = scale;
         this.celestialBodies = new ArrayList<CelestialBody>();
-        setTop(buildTopBar());
+        this.bp = bp;
+        bp.setCenter(this);
+        this.bodyScale = bodyScale;
+        this.running = false;
+        this.radLogCoef = 1;
+        this.distLogCoef = 1;
     }
 
     public void addCelestialBody(CelestialBody body)
@@ -57,28 +65,59 @@ public class MultipleBodySystem extends BorderPane
         }
     }
 
+    public void resetBodies()
+    {
+        for (CelestialBody body: celestialBodies)
+        {
+            body.resetStats();
+        }
+    }
+
     public void updateScreen()
     {
         //System.out.println(celestialBodies);
         pen.setFill(Color.WHITE);
-        pen.fillRect(0, 0, canvas.getWidth(), canvas.getHeight()); // clears the screen
+        pen.fillRect(0, 0, getWidth(), getHeight()); // clears the screen
 
         for (CelestialBody body: celestialBodies)
         {
             pen.setFill(body.color);
-            double radius = 50*(Math.pow(body.mass, 1.0/3.0)/Math.pow(maxMass, 1.0/3.0));
-            pen.fillOval(body.position[0]/scale - radius, body.position[1]/scale - radius, radius*2, radius*2);
+            double radius = bodyScale*Math.pow(Math.E, radLogCoef*Math.log(Math.pow(body.mass, 1.0/3.0)/Math.pow(maxMass, 1.0/3.0)));
+            pen.fillOval(getWidth()/2 + Math.pow(Math.E, distLogCoef*Math.log(body.position[0]/scale)) - radius, getHeight()/2 + Math.pow(Math.E, distLogCoef*Math.log(body.position[1]/scale)) - radius, radius*2, radius*2);
         }
     }
 
-    public HBox buildTopBar()
+    public void updateScale(double newScale)
     {
-        Button play = new Button("Play");
-        
+        scale = newScale;
+        updateScreen();
+    }
 
-        play.setOnAction(e -> {
+    public void updateBodyScale(double newScale)
+    {
+        bodyScale = newScale;
+        updateScreen();
+    }
+
+    public void updateRadLogCoef(double newCoef)
+    {
+        radLogCoef = newCoef;
+        updateScreen();
+    }
+
+    public void updateDistLogCoef(double newCoef)
+    {
+        distLogCoef = newCoef;
+        updateScreen();
+    }
+
+    public void start()
+    {
+        if (!this.running)
+        {
+            this.running = true;
             new Thread(() -> {
-                for (int screenUpdate = 0; screenUpdate < 1800; screenUpdate++)
+                while (this.running)
                 {
                     for (int posUpdate = 0; posUpdate < 24; posUpdate++)
                     {
@@ -95,10 +134,12 @@ public class MultipleBodySystem extends BorderPane
                     }
                 }
             }).start();
-        });
-        HBox out = new HBox();
-        out.getChildren().add(play);
-        return out;
+        }
+    }
+
+    public void stop()
+    {
+        this.running = false;
     }
 
 }

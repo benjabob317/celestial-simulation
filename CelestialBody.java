@@ -5,6 +5,8 @@ public class CelestialBody
 {
     public double[] position; // {x, y} in m
     public double[] velocity; // {v_x, v_y} in m/s
+    public double[] originalStats; // {x, y, v_x, v_y}, cheap way to resetting simulation
+
     public double mass;
     public ArrayList<CelestialBody> otherBodies;
     public Color color;
@@ -13,19 +15,37 @@ public class CelestialBody
 
     public CelestialBody(double[] position, double[] velocity, double mass)
     {
-        this.position[0] = position[0];
-        this.position[1] = position[1];
-        this.velocity[0] = velocity[0];
-        this.velocity[1] = velocity[1];
+        this.position = new double[] {position[0], position[1]};
+        this.velocity = new double[] {velocity[0], velocity[1]};
+        this.originalStats = new double[] {position[0], position[1], velocity[0], velocity[1]};
         this.mass = mass;
+        this.otherBodies = new ArrayList<CelestialBody>();
     }
 
     public CelestialBody(double x, double y, double v_x, double v_y, double mass)
     {
         this.position = new double[] {x, y};
         this.velocity = new double[] {v_x, v_y};
+        this.originalStats = new double[] {x, y, v_x, v_y};
         this.mass = mass;
         this.otherBodies = new ArrayList<CelestialBody>();
+    }
+    
+    public CelestialBody(double mass, Color color)
+    {
+        this.color = color;
+        this.position = new double[] {0, 0};
+        this.velocity = new double[] {0, 0};
+        this.originalStats = new double[] {position[0], position[1], velocity[0], velocity[1]};
+        this.mass = mass;
+        this.otherBodies = new ArrayList<CelestialBody>();
+    }
+
+    public void initVectors(double x, double y, double v_x, double v_y)
+    {
+        originalStats = new double[] {x, y, v_x, v_y};
+        setPosition(x, y);
+        setVelocity(v_x, v_y);
     }
 
     public void setPosition(double x, double y)
@@ -37,7 +57,15 @@ public class CelestialBody
     public void setVelocity(double vx, double vy)
     {
         velocity[0] = vx;
-        velocity[1] = vy;   
+        velocity[1] = vy;
+    }
+    
+    public void resetStats()
+    {
+        position[0] = originalStats[0];
+        position[1] = originalStats[1];
+        velocity[0] = originalStats[2];
+        velocity[1] = originalStats[3];
     }
 
     public double velocityMagnitude()
